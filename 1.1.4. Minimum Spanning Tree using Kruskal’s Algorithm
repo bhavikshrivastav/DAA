@@ -1,0 +1,102 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+
+
+void kruskalMST(int **cost, int V) {
+
+	// Write your code here...
+
+    // Dynamically allocate parent array for Union-Find to track cycles
+    int *parent = (int *)malloc(V * sizeof(int));
+    for (int i = 0; i < V; i++) {
+        parent[i] = i; // Every vertex starts in its own set
+    }
+
+    int edge_count = 0;
+    int total_min_cost = 0;
+
+    // An MST for a connected graph with V vertices always contains exactly V-1 edges
+    while (edge_count < V - 1) {
+        int min_weight = 9999; // 9999 represents infinity/no edge
+        int u = -1, v = -1;
+
+        // Traverse row-wise through the upper triangular matrix to process nodes correctly
+        for (int i = 0; i < V; i++) {
+            for (int j = i + 1; j < V; j++) {
+                if (cost[i][j] < min_weight) {
+                    // Check if vertices i and j belong to different components to avoid cycles
+                    int root_i = i;
+                    while (parent[root_i] != root_i) {
+                        root_i = parent[root_i];
+                    }
+                    
+                    int root_j = j;
+                    while (parent[root_j] != root_j) {
+                        root_j = parent[root_j];
+                    }
+
+                    if (root_i != root_j) {
+                        min_weight = cost[i][j];
+                        u = i;
+                        v = j;
+                    }
+                }
+            }
+        }
+
+        // If no valid edge was found under 9999, the remaining graph is disconnected
+        if (u == -1 || v == -1) {
+            break;
+        }
+
+        // Perform union operation to combine both sets
+        int root_u = u;
+        while (parent[root_u] != root_u) {
+            root_u = parent[root_u];
+        }
+        int root_v = v;
+        while (parent[root_v] != root_v) {
+            root_v = parent[root_v];
+        }
+        parent[root_u] = root_v;
+
+        // Print exactly matching the required text layout (Edge index starting from 0)
+        printf("Edge %d:(%d, %d) cost:%d\n", edge_count, u, v, min_weight);
+        
+        total_min_cost += min_weight;
+        edge_count++;
+    }
+
+    // Print final minimum cost matching output specification
+    printf("Minimum cost= %d\n", total_min_cost);
+
+    // Free the locally allocated tracking buffer
+    free(parent);
+
+
+}
+
+int main() {
+    int V;
+    printf("No of vertices: ");
+    scanf("%d", &V);
+
+    int **cost = (int **)malloc(V * sizeof(int *));
+    for (int i = 0; i < V; i++)
+        cost[i] = (int *)malloc(V * sizeof(int));
+
+    printf("Adjacency matrix:\n");
+    for (int i = 0; i < V; i++)
+        for (int j = 0; j < V; j++)
+            scanf("%d", &cost[i][j]);
+
+    kruskalMST(cost, V);
+
+    for (int i = 0; i < V; i++)
+        free(cost[i]);
+    free(cost);
+
+    return 0;
+}
